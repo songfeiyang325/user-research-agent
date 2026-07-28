@@ -19,10 +19,16 @@ xiaoju-survey 已内置「AI 一句话生成问卷」，但只是**一次性文�
 | 维度 | 结论 |
 |---|---|
 | **核心能力** | 四块全做：①对话式问卷设计 ②结果分析与洞察 ③AI 主持访谈 ④全流程编排 |
-| **模型** | **智谱 GLM 纯文本**（OpenAI 兼容接口；不用视觉/VLM，尽管父目录名为「智谱-VLM」） |
+| **模型** | **智谱 GLM-5.2 纯文本**（OpenAI 兼容接口；不用视觉/VLM，尽管父目录名为「智谱-VLM」） |
 | **落地** | **用 Python 完整做一个**，独立于 NestJS 仓库；xiaoju-survey 作参考/可选对接对象 |
 | **交互形态** | **FastAPI + 轻量 Web UI**（研究员控制台 + 可分享的受访/访谈页） |
 | **问卷/数据** | **自包含**：自带 SQLite 存储、自出受访页，不依赖 NestJS + Mongo |
+| **环境/依赖** | **uv** 管理（`pyproject.toml` + `uv.lock`，`uv add`/`uv sync`/`uv run`） |
+| **部署** | 本机有 **Docker**；M1 起提供 Dockerfile（uv 多阶段构建，自包含 SQLite 无需额外容器） |
+
+## 关键设计原则：模型「协议可切、主攻一个」
+
+我们的 agent 走 **OpenAI 兼容协议**（`messages`/`tools`/`tool_calls`/SSE），`llm/client.py` 抽一层，所以换 GLM↔DeepSeek↔内部网关只改 `base_url`/`api_key`/`model` 三个配置。**但「能调用」不等于「效果一样」**：函数调用稳定性、提示词敏感度、特性差异都会让同一套 prompt 在不同模型上表现不同。因此**提示词与工具调用只针对 GLM-5.2 调优、验证**，其余仅作兜底。详见 [`notes/llm-portability.md`](notes/llm-portability.md)。
 
 ## 四大能力定义
 
@@ -37,8 +43,9 @@ xiaoju-survey 已内置「AI 一句话生成问卷」，但只是**一次性文�
 - 网络（国内）：github.com 的 SSH-22、HTTPS **直连不通**；**SSH 走 443（ssh.github.com:443）通**、**api.github.com 通**；`gh` CLI 未安装
 - 本仓库 `origin` 使用 `ssh://git@ssh.github.com:443/...` 走 443 推送
 - 仓库可见性：**Public**（内容基于已开源的 xiaoju-survey，无真正机密）
+- 本机工具链：uv 0.11.30 · Python 3.10.11 · Docker 29.1.3
 
 ## 待定项
 
-- 智谱账号可用的确切 GLM 模型 id（默认先 `glm-4-plus`，配置化）
+- 智谱账号可用的确切 GLM 模型 id（默认 `glm-5.2`，配置化；上线按控制台/模型列表确认）
 - 控制台 MVP 先不做鉴权（内部工具），后续可加简单 token

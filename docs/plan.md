@@ -13,11 +13,13 @@
 
 ## 技术选型
 
-- **Python 3.10+**，`FastAPI` + `uvicorn`（REST + SSE 流式；访谈用 SSE）
+- **Python 3.10+**，环境/依赖用 **uv** 管理（`pyproject.toml` + `uv.lock`，`uv add`/`uv sync`/`uv run`）
+- `FastAPI` + `uvicorn`（REST + SSE 流式；访谈用 SSE）
 - **SQLite**（`SQLModel` = SQLAlchemy 2 + Pydantic v2，模型即 ORM）
-- **智谱 GLM**：用 `openai` SDK 指向 `https://open.bigmodel.cn/api/paas/v4/`，OpenAI 风格 `tools`/`tool_calls` 函数调用 + `stream`。`base_url`/`model` 全走 `.env`，可无缝切 DeepSeek/内部网关
+- **智谱 GLM-5.2**：用 `openai` SDK 指向 `https://open.bigmodel.cn/api/paas/v4/`，OpenAI 风格 `tools`/`tool_calls` 函数调用 + `stream`。`base_url`/`model` 全走 `.env`，可切 DeepSeek/内部网关（协议可切、主攻一个，见 [`notes/llm-portability.md`](notes/llm-portability.md)）
 - **分析**：`pandas` + `numpy` + `scipy`（交叉分析卡方/Cramér's V）
 - **前端**：**buildless**（无 Node 构建）——Jinja2 模板 + 原生 JS/CSS，交互用 `fetch`+SSE；图表用 Chart.js（CDN）
+- **部署**：Docker（uv 多阶段构建，自包含 SQLite 无需额外容器）
 
 ## 目录结构（新建 Python 包 `research_agent/`）
 
@@ -53,7 +55,7 @@ research_agent/
     templates/            # console.html / respond.html / interview.html / report.html
     static/               # css + 原生 js
 tests/                    # pytest：schema 往返、统计算法、交叉分析、mock-LLM 工具循环
-.env.example  requirements.txt  README.md
+.env.example  pyproject.toml  Dockerfile  README.md
 ```
 
 ## 参考规格（从 xiaoju-survey 移植，非改动）
@@ -86,11 +88,11 @@ tests/                    # pytest：schema 往返、统计算法、交叉分析
 
 ## LLM 集成
 
-`openai` SDK：`base_url` / `api_key` / `model`（默认 `glm-4-plus`，廉价任务用 `glm-4-flash`）全走 `.env`。工具走 OpenAI `tools` 协议，`stream=True`。抽象一层 `llm/client.py`，切 DeepSeek/内部网关只改配置。**待确认**：账号可用的确切 GLM 模型 id。
+`openai` SDK：`base_url` / `api_key` / `model`（默认 `glm-5.2`）全走 `.env`。工具走 OpenAI `tools` 协议，`stream=True`。抽象一层 `llm/client.py`，切 DeepSeek/内部网关只改配置——但**提示词与工具调用只针对 GLM-5.2 调优验证**（能切≠等效，见 [`notes/llm-portability.md`](notes/llm-portability.md)）。**待确认**：账号可用的确切 GLM 模型 id。
 
 ## 构建顺序（分里程碑，先打通竖切再铺开）
 
-- **M1 地基 + 设计闭环**：包脚手架、config、SQLite 模型、GLM 客户端、题型/schema/校验、文本↔schema、Designer Agent + 控制台（聊天+预览）、发布+分享、静态表单受访页+提交 → 打通「设计→发布→采集(表单)」
+- **M1 地基 + 设计闭环**：uv 脚手架(`pyproject.toml`)、config、SQLite 模型、GLM 客户端、题型/schema/校验、文本↔schema、Designer Agent + 控制台（聊天+预览）、发布+分享、静态表单受访页+提交、`Dockerfile` → 打通「设计→发布→采集(表单)」
 - **M2 分析**：stats + crosstab + 开放题聚类 + Analyst Agent + 报告页出图；附造数脚本
 - **M3 AI 访谈**：Interviewer Agent + 访谈受访页(SSE) + 会话存储 + 合成答卷进分析
 - **M4 编排收尾**：项目生命周期/阶段推进/主动建议；pytest + README + .env.example
@@ -99,12 +101,12 @@ tests/                    # pytest：schema 往返、统计算法、交叉分析
 
 ## 验证方式
 
-- `pip install -r requirements.txt` → 配 `.env`（GLM key）→ `uvicorn research_agent.main:app --reload`
+- `uv sync` → 配 `.env`（GLM key）→ `uv run uvicorn research_agent.main:app --reload`（或 `docker build` + `docker run`）
 - `/console` 对话设计问卷 → 发布拿分享链接 → 打开链接填表/做 AI 访谈 → 提交 → 回控制台生成分析报告
-- `pytest`：文本↔schema 往返、统计算法（对拍手算的均值/中位数/方差/NPS）、交叉分析、mock-LLM 的工具循环；造数脚本灌假答卷演示分析
+- `uv run pytest`：文本↔schema 往返、统计算法（对拍手算的均值/中位数/方差/NPS）、交叉分析、mock-LLM 的工具循环；造数脚本灌假答卷演示分析
 
 ## 假设 / 待定
 
-- GLM 模型 id 以账号实际可用为准（默认 `glm-4-plus`，配置化）
+- GLM 模型 id 以账号实际可用为准（默认 `glm-5.2`，配置化）
 - 控制台 MVP 先不做鉴权（内部工具），后续可加简单 token
 - UI 中文、代码注释中文，与团队一致
