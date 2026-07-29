@@ -69,3 +69,15 @@ class LLMClient:
                 if tool_acc:
                     yield ("tool_calls", [tool_acc[i] for i in sorted(tool_acc)])
                 yield ("done", choice.finish_reason)
+
+    def complete(self, messages: list[dict], temperature: float = 0.3) -> str:
+        """一次性（非流式）补全，用于开放题聚类、洞察叙事等。"""
+        if self._client is None:
+            raise RuntimeError("LLM 未配置：mock 模式下不应调用 client.complete")
+        resp = self._client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            temperature=temperature,
+            stream=False,
+        )
+        return resp.choices[0].message.content or ""

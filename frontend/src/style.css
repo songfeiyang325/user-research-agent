@@ -111,3 +111,37 @@ a { color: var(--accent-dark); }
   .console { grid-template-columns: 1fr; }
   .preview { display: none; }
 }
+
+/* ---- 报告页 ---- */
+.report { max-width: 860px; margin: 0 auto; padding: 28px 20px 64px; }
+.rtitle { margin: 8px 0 4px; font-size: 22px; }
+.rcount { color: var(--muted); margin: 0 0 20px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+.card h3 { margin: 0 0 12px; font-size: 15px; }
+.narrative .md { font-size: 14px; line-height: 1.7; }
+.narrative .md h2 { font-size: 17px; margin: 14px 0 8px; }
+.narrative .md h3 { font-size: 15px; margin: 12px 0 6px; }
+.narrative .md ul { padding-left: 20px; margin: 6px 0; }
+.narrative .md li { margin: 4px 0; }
+.q-head { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.q-head .q-type { font-size: 11px; color: var(--muted); background: #f2f4f7; border-radius: 4px; padding: 1px 7px; font-weight: 400; margin-left: 6px; }
+.summary { font-size: 13px; color: var(--accent-dark); margin-bottom: 10px; }
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 120px 1fr 88px; align-items: center; gap: 10px; font-size: 13px; }
+.bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { background: #f2f4f7; border-radius: 4px; height: 16px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); border-radius: 4px; min-width: 2px; }
+.bar-val { color: var(--muted); text-align: right; }
+.theme { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin-bottom: 12px; }
+.theme-name { font-weight: 600; font-size: 14px; }
+.theme-count { color: var(--muted); font-size: 12px; margin-left: 8px; }
+.theme-eg { color: var(--muted); font-size: 13px; margin-top: 3px; }
+.ct-picker { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.ct-picker select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-family: inherit; max-width: 240px; }
+.ct-wrap { overflow-x: auto; }
+table.ct { border-collapse: collapse; font-size: 13px; }
+table.ct th, table.ct td { border: 1px solid var(--line); padding: 6px 12px; text-align: center; }
+table.ct thead th, table.ct tbody th { background: #f7f8fa; font-weight: 600; }
+.ct-stats { margin-top: 10px; font-size: 13px; }
+.phead-actions { display: flex; gap: 8px; }
+.err { color: #f5484a; }

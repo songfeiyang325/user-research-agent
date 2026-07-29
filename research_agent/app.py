@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import design, health, projects, respond, survey
+from .api import analysis, design, health, projects, respond, survey
 from .storage.db import init_db
 
 
@@ -18,7 +18,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    for module in (projects, design, survey, respond, health):
+    for module in (projects, design, survey, respond, analysis, health):
         app.include_router(module.router)
     return app
 

@@ -109,6 +109,10 @@ function onKeydown(e) {
     send()
   }
 }
+
+function openReport() {
+  if (surveyId.value) window.open('/report/' + surveyId.value, '_blank')
+}
 </script>
 
 <template>
@@ -144,7 +148,10 @@ function onKeydown(e) {
       <section class="preview">
         <div class="preview-head">
           <div class="ptitle">{{ title }}</div>
-          <button class="btn primary" :disabled="!canPublish" @click="publish">发布</button>
+          <div class="phead-actions">
+            <button class="btn ghost" :disabled="!surveyId" @click="openReport">查看分析</button>
+            <button class="btn primary" :disabled="!canPublish" @click="publish">发布</button>
+          </div>
         </div>
         <div v-if="shareUrl" class="share">
           已发布 · <a :href="shareUrl" target="_blank">{{ shareUrl }}</a>
