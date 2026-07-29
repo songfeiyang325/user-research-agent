@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>用户调研 Agent · 控制台</title>
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🧭 用户调研 Agent <span class="sub">控制台</span></div>
+    <div class="actions">
+      <button id="newBtn" class="btn ghost">新建调研</button>
+    </div>
+  </header>
+
+  <main class="console">
+    <section class="chat">
+      <div id="messages" class="messages">
+        <div class="hint">
+          <p>👋 我是你的调研助手。用一句话告诉我你想调研什么，我来生成问卷；你可以继续对话来修改。</p>
+          <div class="chips">
+            <button class="chip">面向司机做一次服务满意度调研，5 题左右</button>
+            <button class="chip">调研乘客对新版打车界面的看法</button>
+            <button class="chip">给运营团队做一次内部工具满意度问卷</button>
+          </div>
+        </div>
+      </div>
+      <div class="composer">
+        <textarea id="input" rows="3"
+          placeholder="描述你的调研，Enter 发送 / Shift+Enter 换行"></textarea>
+        <button id="sendBtn" class="btn primary">发送</button>
+      </div>
+    </section>
+
+    <section class="preview">
+      <div class="preview-head">
+        <div class="ptitle" id="previewTitle">问卷预览</div>
+        <button id="publishBtn" class="btn primary" disabled>发布</button>
+      </div>
+      <div id="share" class="share hidden"></div>
+      <div id="previewBody" class="preview-body">
+        <div class="empty">左侧对话生成问卷后，这里实时预览 👉</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/render.js"></script>
+  <script src="/static/console.js"></script>
+</body>
+</html>

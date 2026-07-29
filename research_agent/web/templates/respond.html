@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body class="respond-body">
+  <div class="respond">
+    <h2 id="rtitle"></h2>
+    <div id="form"></div>
+    <button id="submitBtn" class="btn primary block">提交</button>
+    <div id="rmsg" class="rmsg"></div>
+  </div>
+
+  <script>
+    window.__SURVEY__ = {{ survey_json|safe }};
+    window.__PATH__ = "{{ path }}";
+  </script>
+  <script src="/static/render.js"></script>
+  <script src="/static/respond.js"></script>
+</body>
+</html>
