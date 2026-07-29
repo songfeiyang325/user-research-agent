@@ -14,7 +14,13 @@ const shareUrl = ref('')
 const count = ref(0)
 const copied = ref(false)
 const mode = ref('form')
+const stage = ref('')
 const messagesEl = ref(null)
+
+const STAGE_LABELS = {
+  intake: '目标澄清', design: '设计中', collect: '采集中',
+  analyze: '分析中', report: '报告',
+}
 
 const chips = [
   '面向司机做一次服务满意度调研，5 题左右',
@@ -26,6 +32,7 @@ const questions = computed(() => schema.value?.dataConf?.dataList || [])
 const title = computed(
   () => schema.value?.bannerConf?.titleConfig?.mainTitle || '问卷预览'
 )
+const stageLabel = computed(() => STAGE_LABELS[stage.value] || stage.value)
 
 onMounted(async () => {
   const r = await post('/api/projects', { name: '未命名调研' })
@@ -65,6 +72,15 @@ async function send(preset) {
         } else if (evt.type === 'survey') {
           schema.value = evt.survey
           canPublish.value = true
+        } else if (evt.type === 'published') {
+          shareUrl.value = evt.share_url
+          if (evt.mode) mode.value = evt.mode
+          canPublish.value = true
+          refreshCount()
+        } else if (evt.type === 'mode') {
+          mode.value = evt.mode
+        } else if (evt.type === 'stage') {
+          stage.value = evt.stage
         } else if (evt.type === 'error') {
           ai.content = (acc ? acc + '\n' : '') + '⚠️ ' + evt.message
           ai.loading = false
@@ -128,7 +144,9 @@ async function setMode() {
 <template>
   <div>
     <header class="topbar">
-      <div class="brand">🧭 用户调研 Agent <span class="sub">控制台</span></div>
+      <div class="brand">🧭 用户调研 Agent <span class="sub">控制台</span>
+        <span v-if="stage" class="stage-badge">{{ stageLabel }}</span>
+      </div>
       <button class="btn ghost" @click="$router.go(0)">新建调研</button>
     </header>
 

@@ -120,6 +120,12 @@ def set_survey_mode(survey: Survey, mode: str) -> Survey:
     return survey
 
 
+def set_project_stage(project: Project, stage: str) -> Project:
+    project.stage = stage
+    get_db().projects.update_one({"_id": project.id}, {"$set": {"stage": stage}})
+    return project
+
+
 # ---------------- 访谈会话 ----------------
 def create_interview_session(survey_id: str) -> InterviewSession:
     s = InterviewSession(survey_id=survey_id)

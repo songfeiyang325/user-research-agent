@@ -153,3 +153,4 @@ table.ct thead th, table.ct tbody th { background: #f7f8fa; font-weight: 600; }
 .interview-page .composer { border-top: 1px solid var(--line); }
 .interview-end { text-align: center; color: var(--accent-dark); font-size: 14px; margin: 20px 0; }
 .mode-sel { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-family: inherit; background: #fff; cursor: pointer; }
+.stage-badge { display: inline-block; margin-left: 10px; font-size: 12px; font-weight: 400; color: var(--accent-dark); background: #fef6e6; border: 1px solid #fbe3ac; border-radius: 10px; padding: 1px 10px; vertical-align: middle; }
