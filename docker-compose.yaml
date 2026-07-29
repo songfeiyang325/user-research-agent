@@ -1,0 +1,44 @@
+# 用户调研 Agent —— 三容器编排：web(nginx 网关+前端) / backend(FastAPI) / mongo
+# 只有 web 的 8080 对外；backend、mongo 只在内网，靠服务名互访。
+services:
+  mongo:
+    image: mongo:7
+    container_name: ura-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    networks: [app]
+    # 内网即可访问；若想本机用 Compass 连库，临时打开下面一行：
+    # ports: ["27017:27017"]
+
+  backend:
+    build: .                      # 用根目录 Dockerfile（FastAPI）
+    container_name: ura-backend
+    restart: unless-stopped
+    environment:
+      MONGO_URL: mongodb://mongo:27017     # 用服务名 mongo 作主机
+      MONGO_DB: research_agent
+      GLM_API_KEY: ${GLM_API_KEY:-}
+      GLM_BASE_URL: ${GLM_BASE_URL:-https://open.bigmodel.cn/api/paas/v4/}
+      GLM_MODEL: ${GLM_MODEL:-glm-5.2}
+      LLM_MOCK: ${LLM_MOCK:-0}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+    depends_on: [mongo]
+    networks: [app]
+    # 不对外暴露端口，只有 web(nginx) 能内网访问 backend:8000
+
+  web:
+    build: ./frontend             # node 构建 Vue → nginx 托管 + 网关
+    container_name: ura-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"                 # 唯一对外入口
+    depends_on: [backend]
+    networks: [app]
+
+volumes:
+  mongo-data:
+
+networks:
+  app:
+    driver: bridge

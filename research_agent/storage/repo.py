@@ -1,133 +1,113 @@
-"""数据访问（CRUD）。所有函数接收一个 Session。"""
+"""数据访问（CRUD）—— pymongo 实现。函数签名与 M1 基本一致（去掉 session）。"""
 from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
 
-from sqlmodel import Session, select
-
 from ..survey import SurveySchema
+from .db import get_db
 from .models import Message, Project, Response, Survey
 
 
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 # ---------------- Project ----------------
-def create_project(session: Session, name: str, goal: str = "") -> tuple[Project, Survey]:
-    """创建项目，并为其建一份空白草稿问卷。"""
+def create_project(name: str, goal: str = "") -> tuple[Project, Survey]:
     project = Project(name=name, goal=goal)
-    session.add(project)
-    session.commit()
-    session.refresh(project)
+    get_db().projects.insert_one(project.to_mongo())
 
     survey = Survey(project_id=project.id, title=name, schema_data=SurveySchema().model_dump())
-    session.add(survey)
-    session.commit()
-    session.refresh(survey)
+    get_db().surveys.insert_one(survey.to_mongo())
     return project, survey
 
 
-def get_project(session: Session, project_id: str) -> Project | None:
-    return session.get(Project, project_id)
+def get_project(project_id: str) -> Project | None:
+    doc = get_db().projects.find_one({"_id": project_id})
+    return Project.model_validate(doc) if doc else None
 
 
-def list_projects(session: Session) -> list[Project]:
-    return list(session.exec(select(Project).order_by(Project.created_at.desc())))
+def list_projects() -> list[Project]:
+    cur = get_db().projects.find().sort("created_at", -1)
+    return [Project.model_validate(d) for d in cur]
 
 
 # ---------------- Message ----------------
-def add_message(
-    session: Session,
-    project_id: str,
-    role: str,
-    content: str = "",
-    tool_calls: dict | None = None,
-) -> Message:
+def add_message(project_id: str, role: str, content: str = "", tool_calls: dict | None = None) -> Message:
     msg = Message(project_id=project_id, role=role, content=content, tool_calls=tool_calls)
-    session.add(msg)
-    session.commit()
-    session.refresh(msg)
+    get_db().messages.insert_one(msg.to_mongo())
     return msg
 
 
-def get_messages(session: Session, project_id: str) -> list[Message]:
-    return list(
-        session.exec(
-            select(Message)
-            .where(Message.project_id == project_id)
-            .order_by(Message.created_at)
-        )
-    )
+def get_messages(project_id: str) -> list[Message]:
+    cur = get_db().messages.find({"project_id": project_id}).sort("created_at", 1)
+    return [Message.model_validate(d) for d in cur]
 
 
 # ---------------- Survey ----------------
-def get_survey(session: Session, survey_id: str) -> Survey | None:
-    return session.get(Survey, survey_id)
+def get_survey(survey_id: str) -> Survey | None:
+    doc = get_db().surveys.find_one({"_id": survey_id})
+    return Survey.model_validate(doc) if doc else None
 
 
-def get_survey_by_project(session: Session, project_id: str) -> Survey | None:
-    return session.exec(
-        select(Survey).where(Survey.project_id == project_id).order_by(Survey.created_at)
-    ).first()
+def get_survey_by_project(project_id: str) -> Survey | None:
+    doc = get_db().surveys.find_one({"project_id": project_id})
+    return Survey.model_validate(doc) if doc else None
 
 
-def get_survey_by_path(session: Session, share_path: str) -> Survey | None:
+def get_survey_by_path(share_path: str) -> Survey | None:
     if not share_path:
         return None
-    return session.exec(select(Survey).where(Survey.share_path == share_path)).first()
+    doc = get_db().surveys.find_one({"share_path": share_path})
+    return Survey.model_validate(doc) if doc else None
 
 
-def save_draft(session: Session, survey: Survey, schema: SurveySchema) -> Survey:
-    """保存问卷草稿（整份 schema 覆盖，title 同步 banner 主标题）。"""
+def save_draft(survey: Survey, schema: SurveySchema) -> Survey:
     survey.schema_data = schema.model_dump()
     survey.title = schema.title or survey.title
-    session.add(survey)
-    session.commit()
-    session.refresh(survey)
+    get_db().surveys.update_one(
+        {"_id": survey.id},
+        {"$set": {"schema_data": survey.schema_data, "title": survey.title}},
+    )
     return survey
 
 
-def publish_survey(session: Session, survey: Survey) -> Survey:
+def publish_survey(survey: Survey) -> Survey:
     if not survey.share_path:
-        survey.share_path = _unique_share_path(session)
+        survey.share_path = _unique_share_path()
     survey.status = "published"
-    survey.published_at = datetime.now(timezone.utc)
-    session.add(survey)
-    session.commit()
-    session.refresh(survey)
+    survey.published_at = _now()
+    get_db().surveys.update_one(
+        {"_id": survey.id},
+        {"$set": {
+            "share_path": survey.share_path,
+            "status": survey.status,
+            "published_at": survey.published_at,
+        }},
+    )
     return survey
 
 
-def _unique_share_path(session: Session) -> str:
+def _unique_share_path() -> str:
     for _ in range(50):
         token = uuid.uuid4().hex[:8]
-        if not get_survey_by_path(session, token):
+        if get_survey_by_path(token) is None:
             return token
     raise RuntimeError("无法生成唯一分享路径")
 
 
 # ---------------- Response ----------------
-def add_response(
-    session: Session,
-    survey_id: str,
-    data: dict,
-    meta: dict | None = None,
-    channel: str = "",
-) -> Response:
+def add_response(survey_id: str, data: dict, meta: dict | None = None, channel: str = "") -> Response:
     resp = Response(survey_id=survey_id, data=data, meta=meta or {}, channel=channel)
-    session.add(resp)
-    session.commit()
-    session.refresh(resp)
+    get_db().responses.insert_one(resp.to_mongo())
     return resp
 
 
-def list_responses(session: Session, survey_id: str) -> list[Response]:
-    return list(
-        session.exec(
-            select(Response)
-            .where(Response.survey_id == survey_id)
-            .order_by(Response.created_at)
-        )
-    )
+def list_responses(survey_id: str) -> list[Response]:
+    cur = get_db().responses.find({"survey_id": survey_id}).sort("created_at", 1)
+    return [Response.model_validate(d) for d in cur]
 
 
-def count_responses(session: Session, survey_id: str) -> int:
-    return len(list_responses(session, survey_id))
+def count_responses(survey_id: str) -> int:
+    return get_db().responses.count_documents({"survey_id": survey_id})

@@ -1,12 +1,10 @@
 """问卷 API：获取 / 发布 / 查看回收。"""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session
+from fastapi import APIRouter, HTTPException
 
 from ..config import settings
 from ..storage import repo
-from ..storage.db import get_session
 from ..storage.models import Survey
 
 router = APIRouter(prefix="/api")
@@ -17,8 +15,8 @@ def _share_url(sv: Survey) -> str:
 
 
 @router.get("/surveys/{sid}")
-def get_survey(sid: str, session: Session = Depends(get_session)) -> dict:
-    sv = repo.get_survey(session, sid)
+def get_survey(sid: str) -> dict:
+    sv = repo.get_survey(sid)
     if not sv:
         raise HTTPException(404, "问卷不存在")
     return {
@@ -32,24 +30,24 @@ def get_survey(sid: str, session: Session = Depends(get_session)) -> dict:
 
 
 @router.post("/surveys/{sid}/publish")
-def publish(sid: str, session: Session = Depends(get_session)) -> dict:
-    sv = repo.get_survey(session, sid)
+def publish(sid: str) -> dict:
+    sv = repo.get_survey(sid)
     if not sv:
         raise HTTPException(404, "问卷不存在")
     data_list = sv.schema_data.get("dataConf", {}).get("dataList", [])
     if not data_list:
         raise HTTPException(400, "问卷还没有题目，无法发布")
-    repo.publish_survey(session, sv)
+    repo.publish_survey(sv)
     return {"ok": True, "share_path": sv.share_path, "share_url": _share_url(sv)}
 
 
 @router.get("/surveys/{sid}/responses")
-def responses(sid: str, session: Session = Depends(get_session)) -> dict:
-    sv = repo.get_survey(session, sid)
+def responses(sid: str) -> dict:
+    sv = repo.get_survey(sid)
     if not sv:
         raise HTTPException(404, "问卷不存在")
     rows = [
         {"id": r.id, "data": r.data, "created_at": r.created_at.isoformat()}
-        for r in repo.list_responses(session, sid)
+        for r in repo.list_responses(sid)
     ]
     return {"count": len(rows), "rows": rows}

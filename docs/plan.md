@@ -1,6 +1,8 @@
 # 用户调研 Agent — 实现方案
 
 > 实现方案（设计稿）。已确认决策见 [`decisions.md`](decisions.md)；参考规格见 [`research/`](research/)。
+>
+> **架构（R1，2026-07-29 已实现）**：Vue3 前端 + FastAPI 后端 + MongoDB + nginx 网关，docker compose 三容器；见 [`architecture.md`](architecture.md)。「对话式设计→发布→表单采集」已端到端跑通。下方「目录结构/数据模型」保留了 M1 的旧描述，以架构文档与实际代码为准。
 
 ## 目标
 
@@ -15,11 +17,11 @@
 
 - **Python 3.10+**，环境/依赖用 **uv** 管理（`pyproject.toml` + `uv.lock`，`uv add`/`uv sync`/`uv run`）
 - `FastAPI` + `uvicorn`（REST + SSE 流式；访谈用 SSE）
-- **SQLite**（`SQLModel` = SQLAlchemy 2 + Pydantic v2，模型即 ORM）
+- **MongoDB**（pymongo；文档型，问卷/答卷天然文档结构；测试用 mongomock 离线）
 - **智谱 GLM-5.2**：用 `openai` SDK 指向 `https://open.bigmodel.cn/api/paas/v4/`，OpenAI 风格 `tools`/`tool_calls` 函数调用 + `stream`。`base_url`/`model` 全走 `.env`，可切 DeepSeek/内部网关（协议可切、主攻一个，见 [`notes/llm-portability.md`](notes/llm-portability.md)）
 - **分析**：`pandas` + `numpy` + `scipy`（交叉分析卡方/Cramér's V）
-- **前端**：**buildless**（无 Node 构建）——Jinja2 模板 + 原生 JS/CSS，交互用 `fetch`+SSE；图表用 Chart.js（CDN）
-- **部署**：Docker（uv 多阶段构建，自包含 SQLite 无需额外容器）
+- **前端**：**Vue3 + Vite**（`frontend/`，前后端分离）；图表用 Chart.js（M2）
+- **网关/部署**：**nginx**（托管前端静态 + 反向代理 `/api`）+ **docker compose** 三容器编排，只暴露 nginx。详见 [`architecture.md`](architecture.md)
 
 ## 目录结构（新建 Python 包 `research_agent/`）
 

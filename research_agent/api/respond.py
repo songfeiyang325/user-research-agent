@@ -1,18 +1,12 @@
-"""受访者侧：答题页 + 提交。"""
+"""受访者侧 API：取已发布问卷 schema + 提交答卷（页面由前端 Vue 渲染）。"""
 from __future__ import annotations
 
-import json
-
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from sqlmodel import Session
 
 from ..storage import repo
-from ..storage.db import get_session
-from ..web import templates
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 class SubmitIn(BaseModel):
@@ -20,26 +14,18 @@ class SubmitIn(BaseModel):
     meta: dict = {}
 
 
-@router.get("/r/{path}", response_class=HTMLResponse)
-def respond_page(path: str, request: Request, session: Session = Depends(get_session)):
-    sv = repo.get_survey_by_path(session, path)
-    if not sv or sv.status != "published":
-        return HTMLResponse("<h3 style='font-family:sans-serif;text-align:center;margin-top:80px'>问卷不存在或未发布</h3>", status_code=404)
-    return templates.TemplateResponse(
-        request,
-        "respond.html",
-        {
-            "title": sv.title or "问卷",
-            "path": path,
-            "survey_json": json.dumps(sv.schema_data, ensure_ascii=False),
-        },
-    )
-
-
-@router.post("/api/r/{path}")
-def submit(path: str, body: SubmitIn, session: Session = Depends(get_session)) -> dict:
-    sv = repo.get_survey_by_path(session, path)
+@router.get("/r/{path}/schema")
+def respond_schema(path: str) -> dict:
+    sv = repo.get_survey_by_path(path)
     if not sv or sv.status != "published":
         raise HTTPException(404, "问卷不存在或未发布")
-    repo.add_response(session, sv.id, body.data, body.meta, channel="web")
+    return {"title": sv.title, "schema": sv.schema_data}
+
+
+@router.post("/r/{path}")
+def submit(path: str, body: SubmitIn) -> dict:
+    sv = repo.get_survey_by_path(path)
+    if not sv or sv.status != "published":
+        raise HTTPException(404, "问卷不存在或未发布")
+    repo.add_response(sv.id, body.data, body.meta, channel="web")
     return {"ok": True}

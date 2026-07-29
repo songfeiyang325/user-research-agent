@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from sqlmodel import Session
-
 from ..llm.client import LLMClient
 from ..llm.prompts import DESIGNER_SYSTEM_PROMPT, SAVE_SURVEY_TOOL
 from ..storage import repo
@@ -18,8 +16,7 @@ from .base import ToolAgent
 
 
 class DesignerAgent:
-    def __init__(self, session: Session, survey: Survey):
-        self.session = session
+    def __init__(self, survey: Survey):
         self.survey = survey
         self.client = LLMClient()
         self.agent = ToolAgent(
@@ -32,7 +29,7 @@ class DesignerAgent:
     # ---- 工具实现 ----
     def _save_survey_draft(self, title: str, questions: list[dict]) -> dict:
         schema = build_survey(title, questions)
-        repo.save_draft(self.session, self.survey, schema)
+        repo.save_draft(self.survey, schema)
         return {
             "ok": True,
             "title": schema.title,

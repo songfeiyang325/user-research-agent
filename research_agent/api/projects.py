@@ -1,12 +1,10 @@
 """项目相关 API。"""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from sqlmodel import Session
 
 from ..storage import repo
-from ..storage.db import get_session
 from ..storage.models import Survey
 
 router = APIRouter(prefix="/api")
@@ -28,8 +26,8 @@ def survey_brief(sv: Survey) -> dict:
 
 
 @router.post("/projects")
-def create_project(body: ProjectIn, session: Session = Depends(get_session)) -> dict:
-    project, survey = repo.create_project(session, body.name, body.goal)
+def create_project(body: ProjectIn) -> dict:
+    project, survey = repo.create_project(body.name, body.goal)
     return {
         "project_id": project.id,
         "survey_id": survey.id,
@@ -38,14 +36,14 @@ def create_project(body: ProjectIn, session: Session = Depends(get_session)) -> 
 
 
 @router.get("/projects/{pid}")
-def get_project(pid: str, session: Session = Depends(get_session)) -> dict:
-    project = repo.get_project(session, pid)
+def get_project(pid: str) -> dict:
+    project = repo.get_project(pid)
     if not project:
         raise HTTPException(404, "项目不存在")
-    survey = repo.get_survey_by_project(session, pid)
+    survey = repo.get_survey_by_project(pid)
     messages = [
         {"role": m.role, "content": m.content}
-        for m in repo.get_messages(session, pid)
+        for m in repo.get_messages(pid)
         if m.role in ("user", "assistant")
     ]
     return {

@@ -21,10 +21,14 @@ xiaoju-survey 已内置「AI 一句话生成问卷」，但只是**一次性文�
 | **核心能力** | 四块全做：①对话式问卷设计 ②结果分析与洞察 ③AI 主持访谈 ④全流程编排 |
 | **模型** | **智谱 GLM-5.2 纯文本**（OpenAI 兼容接口；不用视觉/VLM，尽管父目录名为「智谱-VLM」） |
 | **落地** | **用 Python 完整做一个**，独立于 NestJS 仓库；xiaoju-survey 作参考/可选对接对象 |
-| **交互形态** | **FastAPI + 轻量 Web UI**（研究员控制台 + 可分享的受访/访谈页） |
-| **问卷/数据** | **自包含**：自带 SQLite 存储、自出受访页，不依赖 NestJS + Mongo |
+| **交互形态** | **前后端分离**：Vue3 + Vite 前端 + FastAPI 后端 + nginx 网关（研究员控制台 + 可分享受访页） |
+| **问卷/数据** | **MongoDB**（独立容器，文档型，天然适配问卷/答卷；后端用 pymongo 连），不依赖 NestJS |
 | **环境/依赖** | **uv** 管理（`pyproject.toml` + `uv.lock`，`uv add`/`uv sync`/`uv run`） |
 | **部署** | 本机有 **Docker**；M1 起提供 Dockerfile（uv 多阶段构建，自包含 SQLite 无需额外容器） |
+
+## 架构修订（R1，2026-07-29）
+
+M1 曾为图快用 SQLite + 单体 + 服务端直出 HTML，与「多容器 / 前后端分离」的初衷不符。R1 掰正为：Vue3+Vite 前端、FastAPI 纯 JSON 后端、MongoDB、nginx 网关，`docker compose` 编排三容器（只暴露 nginx）。M1 的核心逻辑（`survey/` `agents/` `llm/`）保留。详见 [`architecture.md`](architecture.md)。
 
 ## 关键设计原则：模型「协议可切、主攻一个」
 

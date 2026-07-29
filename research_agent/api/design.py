@@ -4,14 +4,12 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlmodel import Session
 
 from ..agents import DesignerAgent
 from ..storage import repo
-from ..storage.db import get_session
 
 router = APIRouter(prefix="/api")
 
@@ -25,21 +23,21 @@ def _sse(obj: dict) -> str:
 
 
 @router.post("/projects/{pid}/chat")
-def chat(pid: str, body: ChatIn, session: Session = Depends(get_session)) -> StreamingResponse:
-    project = repo.get_project(session, pid)
+def chat(pid: str, body: ChatIn) -> StreamingResponse:
+    project = repo.get_project(pid)
     if not project:
         raise HTTPException(404, "项目不存在")
-    survey = repo.get_survey_by_project(session, pid)
+    survey = repo.get_survey_by_project(pid)
     if survey is None:
         raise HTTPException(404, "问卷不存在")
 
-    repo.add_message(session, pid, "user", body.message)
+    repo.add_message(pid, "user", body.message)
     history = [
         {"role": m.role, "content": m.content}
-        for m in repo.get_messages(session, pid)
+        for m in repo.get_messages(pid)
         if m.role in ("user", "assistant")
     ]
-    designer = DesignerAgent(session, survey)
+    designer = DesignerAgent(survey)
 
     def gen() -> Iterator[str]:
         acc: list[str] = []
@@ -53,7 +51,7 @@ def chat(pid: str, body: ChatIn, session: Session = Depends(get_session)) -> Str
                     result = p.get("result", {})
                     if p.get("name") == "save_survey_draft" and result.get("ok"):
                         yield _sse({"type": "survey", "survey": result["survey"]})
-            repo.add_message(session, pid, "assistant", "".join(acc))
+            repo.add_message(pid, "assistant", "".join(acc))
             yield _sse({"type": "done"})
         except Exception as e:  # noqa: BLE001
             yield _sse({"type": "error", "message": str(e)})
