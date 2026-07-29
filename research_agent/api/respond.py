@@ -19,7 +19,7 @@ def respond_schema(path: str) -> dict:
     sv = repo.get_survey_by_path(path)
     if not sv or sv.status != "published":
         raise HTTPException(404, "问卷不存在或未发布")
-    return {"title": sv.title, "schema": sv.schema_data}
+    return {"title": sv.title, "mode": sv.mode, "schema": sv.schema_data}
 
 
 @router.post("/r/{path}")

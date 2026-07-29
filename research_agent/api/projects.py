@@ -20,6 +20,7 @@ def survey_brief(sv: Survey) -> dict:
         "id": sv.id,
         "title": sv.title,
         "status": sv.status,
+        "mode": sv.mode,
         "share_path": sv.share_path,
         "schema": sv.schema_data,
     }

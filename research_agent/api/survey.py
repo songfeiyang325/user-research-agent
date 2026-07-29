@@ -1,13 +1,18 @@
-"""问卷 API：获取 / 发布 / 查看回收。"""
+"""问卷 API：获取 / 发布 / 投放模式 / 查看回收。"""
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from ..config import settings
 from ..storage import repo
 from ..storage.models import Survey
 
 router = APIRouter(prefix="/api")
+
+
+class ModeIn(BaseModel):
+    mode: str  # form | interview
 
 
 def _share_url(sv: Survey) -> str:
@@ -23,10 +28,22 @@ def get_survey(sid: str) -> dict:
         "id": sv.id,
         "title": sv.title,
         "status": sv.status,
+        "mode": sv.mode,
         "share_path": sv.share_path,
         "share_url": _share_url(sv),
         "schema": sv.schema_data,
     }
+
+
+@router.post("/surveys/{sid}/mode")
+def set_mode(sid: str, body: ModeIn) -> dict:
+    if body.mode not in ("form", "interview"):
+        raise HTTPException(400, "mode 只能是 form 或 interview")
+    sv = repo.get_survey(sid)
+    if not sv:
+        raise HTTPException(404, "问卷不存在")
+    repo.set_survey_mode(sv, body.mode)
+    return {"ok": True, "mode": sv.mode}
 
 
 @router.post("/surveys/{sid}/publish")

@@ -143,5 +143,13 @@ table.ct { border-collapse: collapse; font-size: 13px; }
 table.ct th, table.ct td { border: 1px solid var(--line); padding: 6px 12px; text-align: center; }
 table.ct thead th, table.ct tbody th { background: #f7f8fa; font-weight: 600; }
 .ct-stats { margin-top: 10px; font-size: 13px; }
-.phead-actions { display: flex; gap: 8px; }
+.phead-actions { display: flex; gap: 8px; align-items: center; }
 .err { color: #f5484a; }
+
+/* ---- AI 访谈受访页 ---- */
+.interview-page { max-width: 680px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; background: var(--panel); }
+.iv-head { padding: 16px 24px; border-bottom: 1px solid var(--line); font-weight: 600; }
+.interview-page .messages { flex: 1; overflow-y: auto; padding: 24px; }
+.interview-page .composer { border-top: 1px solid var(--line); }
+.interview-end { text-align: center; color: var(--accent-dark); font-size: 14px; margin: 20px 0; }
+.mode-sel { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-family: inherit; background: #fff; cursor: pointer; }

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from ..survey import SurveySchema
 from .db import get_db
-from .models import Message, Project, Response, Survey
+from .models import InterviewSession, Message, Project, Response, Survey
 
 
 def _now() -> datetime:
@@ -111,3 +111,41 @@ def list_responses(survey_id: str) -> list[Response]:
 
 def count_responses(survey_id: str) -> int:
     return get_db().responses.count_documents({"survey_id": survey_id})
+
+
+# ---------------- 投放模式 ----------------
+def set_survey_mode(survey: Survey, mode: str) -> Survey:
+    survey.mode = mode
+    get_db().surveys.update_one({"_id": survey.id}, {"$set": {"mode": mode}})
+    return survey
+
+
+# ---------------- 访谈会话 ----------------
+def create_interview_session(survey_id: str) -> InterviewSession:
+    s = InterviewSession(survey_id=survey_id)
+    get_db().interview_sessions.insert_one(s.to_mongo())
+    return s
+
+
+def get_interview_session(session_id: str) -> InterviewSession | None:
+    doc = get_db().interview_sessions.find_one({"_id": session_id})
+    return InterviewSession.model_validate(doc) if doc else None
+
+
+def append_turn(session: InterviewSession, role: str, content: str) -> InterviewSession:
+    session.transcript.append({"role": role, "content": content})
+    get_db().interview_sessions.update_one(
+        {"_id": session.id}, {"$set": {"transcript": session.transcript}}
+    )
+    return session
+
+
+def finish_interview(session: InterviewSession, extracted: dict) -> InterviewSession:
+    session.status = "done"
+    session.extracted = extracted
+    session.finished_at = _now()
+    get_db().interview_sessions.update_one(
+        {"_id": session.id},
+        {"$set": {"status": "done", "extracted": extracted, "finished_at": session.finished_at}},
+    )
+    return session

@@ -60,3 +60,14 @@ class Response(_Doc):
     meta: dict = Field(default_factory=dict)
     channel: str = ""
     created_at: datetime = Field(default_factory=_now)
+
+
+class InterviewSession(_Doc):
+    """一次 AI 主持访谈会话：整段逐字稿 + 结束时抽取的结构化答卷。"""
+
+    survey_id: str
+    status: str = "active"                       # active | done
+    transcript: list[dict] = Field(default_factory=list)  # [{role, content}] role: assistant(主持)/user(受访)
+    extracted: dict = Field(default_factory=dict)         # {field: 值}
+    created_at: datetime = Field(default_factory=_now)
+    finished_at: Optional[datetime] = None

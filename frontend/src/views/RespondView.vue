@@ -3,10 +3,12 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { get, post } from '../api'
 import QuestionItem from '../components/QuestionItem.vue'
+import InterviewChat from '../components/InterviewChat.vue'
 
 const route = useRoute()
 const path = route.params.path
 const title = ref('问卷')
+const mode = ref('form')
 const schema = ref(null)
 const answers = reactive({})
 const msg = ref('')
@@ -21,6 +23,7 @@ onMounted(async () => {
   try {
     const r = await get(`/api/r/${path}/schema`)
     title.value = r.title || '问卷'
+    mode.value = r.mode || 'form'
     schema.value = r.schema
   } catch (e) {
     loadError.value = '问卷不存在或未发布'
@@ -58,11 +61,14 @@ async function submit() {
 </script>
 
 <template>
-  <div class="respond-body">
-    <div v-if="loadError" class="notfound">{{ loadError }}</div>
-    <div v-else-if="done" class="respond">
-      <div class="done">✅ 提交成功，感谢你的参与！</div>
-    </div>
+  <div v-if="loadError" class="respond-body"><div class="notfound">{{ loadError }}</div></div>
+
+  <!-- AI 主持访谈 -->
+  <InterviewChat v-else-if="mode === 'interview' && schema" :path="path" :title="title" />
+
+  <!-- 静态表单 -->
+  <div v-else class="respond-body">
+    <div v-if="done" class="respond"><div class="done">✅ 提交成功，感谢你的参与！</div></div>
     <div v-else-if="schema" class="respond">
       <h2>{{ title }}</h2>
       <QuestionItem

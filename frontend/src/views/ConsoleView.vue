@@ -13,6 +13,7 @@ const canPublish = ref(false)
 const shareUrl = ref('')
 const count = ref(0)
 const copied = ref(false)
+const mode = ref('form')
 const messagesEl = ref(null)
 
 const chips = [
@@ -31,6 +32,7 @@ onMounted(async () => {
   projectId.value = r.project_id
   surveyId.value = r.survey_id
   schema.value = r.survey.schema
+  mode.value = r.survey.mode || 'form'
 })
 
 function scrollBottom() {
@@ -113,6 +115,14 @@ function onKeydown(e) {
 function openReport() {
   if (surveyId.value) window.open('/report/' + surveyId.value, '_blank')
 }
+
+async function setMode() {
+  try {
+    await post(`/api/surveys/${surveyId.value}/mode`, { mode: mode.value })
+  } catch (e) {
+    alert(e.message)
+  }
+}
 </script>
 
 <template>
@@ -149,6 +159,10 @@ function openReport() {
         <div class="preview-head">
           <div class="ptitle">{{ title }}</div>
           <div class="phead-actions">
+            <select class="mode-sel" v-model="mode" @change="setMode" title="投放方式">
+              <option value="form">📝 表单</option>
+              <option value="interview">🎤 AI 访谈</option>
+            </select>
             <button class="btn ghost" :disabled="!surveyId" @click="openReport">查看分析</button>
             <button class="btn primary" :disabled="!canPublish" @click="publish">发布</button>
           </div>
