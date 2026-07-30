@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { get, post } from '../api'
+import { visibleQuestions } from '../logic'
 import QuestionItem from '../components/QuestionItem.vue'
 import InterviewChat from '../components/InterviewChat.vue'
 
@@ -17,7 +18,7 @@ const done = ref(false)
 const loadError = ref('')
 const start = Date.now()
 
-const questions = computed(() => schema.value?.dataConf?.dataList || [])
+const questions = computed(() => visibleQuestions(schema.value || {}, answers))
 
 onMounted(async () => {
   try {
@@ -38,8 +39,9 @@ function answered(q) {
 }
 
 async function submit() {
+  const vis = questions.value
   const missing = []
-  questions.value.forEach((q, i) => {
+  vis.forEach((q, i) => {
     if (q.isRequired && !answered(q)) missing.push(i + 1)
   })
   if (missing.length) {
@@ -47,9 +49,15 @@ async function submit() {
     msg.value = '请完成必填题：第 ' + missing.join('、') + ' 题'
     return
   }
+  // 只提交当前可见题目的作答（被逻辑隐藏的不计入）
+  const data = {}
+  vis.forEach((q) => {
+    const v = answers[q.field]
+    if (v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)) data[q.field] = v
+  })
   try {
     await post(`/api/r/${path}`, {
-      data: { ...answers },
+      data,
       meta: { diffTime: (Date.now() - start) / 1000 },
     })
     done.value = true

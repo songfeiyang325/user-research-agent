@@ -154,3 +154,16 @@ table.ct thead th, table.ct tbody th { background: #f7f8fa; font-weight: 600; }
 .interview-end { text-align: center; color: var(--accent-dark); font-size: 14px; margin: 20px 0; }
 .mode-sel { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-family: inherit; background: #fff; cursor: pointer; }
 .stage-badge { display: inline-block; margin-left: 10px; font-size: 12px; font-weight: 400; color: var(--accent-dark); background: #fef6e6; border: 1px solid #fbe3ac; border-radius: 10px; padding: 1px 10px; vertical-align: middle; }
+.actions { display: flex; gap: 8px; align-items: center; }
+.actions a.btn { text-decoration: none; }
+
+/* ---- 打印/导出 PDF ---- */
+@media print {
+  .topbar, .actions, .ct-picker { display: none !important; }
+  body, .report { background: #fff; }
+  .report { max-width: none; padding: 0; }
+  .card { break-inside: avoid; box-shadow: none; border-color: #ddd; }
+  .bar-fill, table.ct td, table.ct th {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+}

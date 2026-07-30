@@ -7,7 +7,8 @@ from __future__ import annotations
 import random
 from typing import Any, Iterable
 
-from .schema import DataConf, Option, Question, SurveySchema
+from .logic import build_show_logic
+from .schema import DataConf, LogicConf, Option, Question, SurveySchema
 from .types import (
     CHOICE_TYPES,
     INPUT_TYPES,
@@ -95,11 +96,16 @@ def build_question(
     return q
 
 
-def build_survey(title: str, questions_spec: list[dict[str, Any]]) -> SurveySchema:
+def build_survey(
+    title: str,
+    questions_spec: list[dict[str, Any]],
+    logic_spec: list[dict[str, Any]] | None = None,
+) -> SurveySchema:
     """把「简化题目描述」列表装配成完整 SurveySchema。
 
     questions_spec 每项：{type, title, required?, options?[], 及类型专属键}
-    —— 正是 Designer Agent 工具产出的形状。
+    logic_spec 每项（可选）：{show, when, op, options[]} —— 显示逻辑
+    —— 正是 Designer/Orchestrator Agent 工具产出的形状。
     """
     used_fields: set[str] = set()
     used_hashes: set[str] = set()
@@ -120,6 +126,8 @@ def build_survey(title: str, questions_spec: list[dict[str, Any]]) -> SurveySche
     survey = SurveySchema()
     survey.title = title
     survey.dataConf = DataConf(dataList=questions)
+    if logic_spec:
+        survey.logicConf = LogicConf(showLogicConf=build_show_logic(questions, logic_spec))
     return survey
 
 

@@ -98,8 +98,8 @@ class OrchestratorAgent:
         return f"{ORCHESTRATOR_SYSTEM}\n\n当前状态：\n{self._state()}"
 
     # ---- 工具实现 ----
-    def _save(self, title: str, questions: list[dict]) -> dict:
-        schema = build_survey(title, questions)
+    def _save(self, title: str, questions: list[dict], logic: list[dict] | None = None) -> dict:
+        schema = build_survey(title, questions, logic)
         repo.save_draft(self.survey, schema)
         repo.set_project_stage(self.project, "design")
         return {"ok": True, "question_count": len(schema.questions), "survey": self.survey.schema_data}

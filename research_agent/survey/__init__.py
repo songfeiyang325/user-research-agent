@@ -7,6 +7,7 @@ from .schema import (  # noqa: F401
     Question,
     SurveySchema,
 )
+from .logic import build_show_logic, is_visible  # noqa: F401
 from .textscheme import SURVEY_TEXT_FORMAT, schema_to_text, text_to_schema  # noqa: F401
 from .types import (  # noqa: F401
     CHOICE_TYPES,

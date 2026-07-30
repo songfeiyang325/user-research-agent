@@ -58,6 +58,22 @@ SAVE_SURVEY_TOOL = {
                     "items": _QUESTION_ITEM_SCHEMA,
                     "description": "完整题目列表（按展示顺序）",
                 },
+                "logic": {
+                    "type": "array",
+                    "description": "可选的显示逻辑：仅当某题满足条件时才显示另一题",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "show": {"type": "integer", "description": "被条件显示的题目序号(从1开始)"},
+                            "when": {"type": "integer", "description": "作为条件的题目序号(从1开始)"},
+                            "op": {"type": "string", "enum": ["in", "nin", "eq", "neq"],
+                                   "description": "in=选了任一 / nin=有未选 / eq=选了全部 / neq=都没选"},
+                            "options": {"type": "array", "items": {"type": "string"},
+                                        "description": "条件涉及的选项文本"},
+                        },
+                        "required": ["show", "when", "op", "options"],
+                    },
+                },
             },
             "required": ["title", "questions"],
         },

@@ -27,8 +27,8 @@ class DesignerAgent:
         )
 
     # ---- 工具实现 ----
-    def _save_survey_draft(self, title: str, questions: list[dict]) -> dict:
-        schema = build_survey(title, questions)
+    def _save_survey_draft(self, title: str, questions: list[dict], logic: list[dict] | None = None) -> dict:
+        schema = build_survey(title, questions, logic)
         repo.save_draft(self.survey, schema)
         return {
             "ok": True,

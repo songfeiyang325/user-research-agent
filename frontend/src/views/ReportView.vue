@@ -53,13 +53,20 @@ function cellBg(v, max) {
   const t = max ? v / max : 0
   return `rgba(250,166,0,${(0.06 + 0.74 * t).toFixed(3)})`
 }
+function printPdf() {
+  window.print()
+}
 </script>
 
 <template>
   <div>
     <header class="topbar">
       <div class="brand">📊 分析报告</div>
-      <a class="btn ghost" href="/">← 返回控制台</a>
+      <div class="actions">
+        <a class="btn ghost" :href="`/api/surveys/${sid}/export.xlsx`">导出 Excel</a>
+        <button class="btn ghost" @click="printPdf">导出 PDF</button>
+        <a class="btn ghost" href="/">← 返回控制台</a>
+      </div>
     </header>
 
     <div class="report" v-if="loadErr">
